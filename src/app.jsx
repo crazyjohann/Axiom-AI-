@@ -730,11 +730,9 @@ function LoginPage({ onLoginSuccess, onGoBack, auth }) {
 
         try {
             const provider = new GoogleAuthProvider();
-            // Note: The 'auth/unauthorized-domain' error typically occurs because the current domain
-            // (e.g., the Canvas preview URL) is not added to the authorized domains in your Firebase project settings.
-            // To fix this for a real deployment, you would go to Firebase Console -> Authentication -> Settings -> Authorized domains
-            // and add the domain where your app is hosted.
-            // For this demonstration, we will simulate a successful Google Sign-in.
+            // In a real deployment, if you encounter 'auth/unauthorized-domain' errors,
+            // ensure the domain where your app is hosted (e.g., Netlify/Vercel URL)
+            // is added to "Authorized domains" in your Firebase Console -> Authentication -> Settings.
             console.log("Attempting Google Sign-in...");
             await signInWithPopup(auth, provider);
             setShow2FAModal(true); // Show 2FA modal on successful Google Sign-in
@@ -1086,9 +1084,9 @@ function Chat({ db, auth, userId, onSignOut, onNavigate, currentView, currentPla
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: userMessageText }] });
             const payload = { contents: chatHistory };
-            // IMPORTANT: Replace "" with your actual Gemini API Key for deployment!
-            // For security, consider using environment variables in a real application.
-            const apiKey = "";
+            // For deployment, replace the empty string with your actual Gemini API Key.
+            // Consider using environment variables for security in production.
+            const apiKey = ""; // YOUR GEMINI API KEY HERE FOR DEPLOYMENT
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             const response = await fetchWithRetry(apiUrl, {
@@ -1332,9 +1330,9 @@ function ImageGenerator({ db, auth, userId, onSignOut, onNavigate, currentView, 
             const finalPrompt = `A clear, high-quality, photorealistic image of the following: "${prompt}"`;
 
             const payload = { instances: { prompt: finalPrompt }, parameters: { "sampleCount": 1 } };
-            // IMPORTANT: Replace "" with your actual Gemini API Key for deployment!
-            // For security, consider using environment variables in a real application.
-            const apiKey = "";
+            // For deployment, replace the empty string with your actual Gemini API Key.
+            // Consider using environment variables for security in production.
+            const apiKey = ""; // YOUR GEMINI API KEY HERE FOR DEPLOYMENT
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
 
             const response = await fetch(apiUrl, {
@@ -1511,9 +1509,9 @@ function CodePlayground({ db, auth, userId, onSignOut, onNavigate, currentView, 
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: promptText }] });
             const payload = { contents: chatHistory };
-            // IMPORTANT: Replace "" with your actual Gemini API Key for deployment!
-            // For security, consider using environment variables in a real application.
-            const apiKey = "";
+            // For deployment, replace the empty string with your actual Gemini API Key.
+            // Consider using environment variables for security in production.
+            const apiKey = ""; // YOUR GEMINI API KEY HERE FOR DEPLOYMENT
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             const response = await fetchWithRetry(apiUrl, {
@@ -1762,9 +1760,9 @@ function CreativeCanvas({ db, auth, userId, onSignOut, onNavigate, currentView, 
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: promptText }] });
             const payload = { contents: chatHistory };
-            // IMPORTANT: Replace "" with your actual Gemini API Key for deployment!
-            // For security, consider using environment variables in a real application.
-            const apiKey = "";
+            // For deployment, replace the empty string with your actual Gemini API Key.
+            // Consider using environment variables for security in production.
+            const apiKey = ""; // YOUR GEMINI API KEY HERE FOR DEPLOYMENT
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
             const response = await fetchWithRetry(apiUrl, {
@@ -1932,7 +1930,11 @@ function DeepResearch({ db, auth, userId, onSignOut, onNavigate, currentView, cu
         setResearchResult('');
         setError('');
 
-        const llmApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=`; // API key is handled by Canvas runtime
+        // The API key is intentionally left as an empty string here for Canvas runtime injection.
+        // For deployment, you would replace this empty string with your actual Gemini API Key.
+        // Consider using environment variables for security in production deployments.
+        const apiKey = ""; // YOUR GEMINI API KEY HERE FOR DEPLOYMENT
+        const llmApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
         try {
             console.log("Directly querying LLM for comprehensive research summary.");
@@ -1950,9 +1952,6 @@ function DeepResearch({ db, auth, userId, onSignOut, onNavigate, currentView, cu
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: llmPrompt }] });
             const llmPayload = { contents: chatHistory };
-            // IMPORTANT: Replace "" with your actual Gemini API Key for deployment!
-            // For security, consider using environment variables in a real application.
-            const apiKey = "";
             
 
             const llmResponse = await fetchWithRetry(llmApiUrl, {
@@ -1993,9 +1992,9 @@ function DeepResearch({ db, auth, userId, onSignOut, onNavigate, currentView, cu
             console.error("Error during deep research (LLM call):", e);
             setError(`An error occurred during research: ${e.message}. This is likely a network issue or the LLM service is temporarily unavailable. Please try again.`);
         } finally {
-            setLoading(false);
-        }
-    };
+                setLoading(false);
+            }
+        };
 
     return (
         <div className="flex h-screen bg-gray-900 text-gray-100 font-inter">
