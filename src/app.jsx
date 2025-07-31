@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef, createContext, useContext } from 'react';
 import { initializeApp } from 'firebase/app';
 import {
-    getAuth, signInAnonymously, signInWithCustomToken, signOut,
+    getAuth, signInAnonymously, signOut,
     onAuthStateChanged, GoogleAuthProvider, signInWithPopup,
     // createUserWithEmailAndPassword, signInWithEmailAndPassword // Keep these imported for potential future full implementation
 } from 'firebase/auth';
@@ -1022,7 +1022,8 @@ function Chat({ db, auth, userId, onSignOut, onNavigate, currentView, currentPla
     // Effect to fetch messages from Firestore
     useEffect(() => {
         if (db && userId) {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            // Use a hardcoded app ID or derive from Firebase config for external deployment
+            const appId = process.env.REACT_APP_FIREBASE_PROJECT_ID || 'stellarmind-app';
             const messagesCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/messages`);
             const q = query(messagesCollectionRef);
 
@@ -1078,7 +1079,7 @@ function Chat({ db, auth, userId, onSignOut, onNavigate, currentView, currentPla
         };
 
         try {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const appId = process.env.REACT_APP_FIREBASE_PROJECT_ID || 'stellarmind-app';
             await addDoc(collection(db, `artifacts/${appId}/users/${userId}/messages`), userMessage);
 
             let chatHistory = [];
@@ -1362,7 +1363,7 @@ function ImageGenerator({ db, auth, userId, onSignOut, onNavigate, currentView, 
                 setImageUrl(generatedImageUrl);
 
                 if (db && userId) {
-                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                    const appId = process.env.REACT_APP_FIREBASE_PROJECT_ID || 'stellarmind-app';
                     await addDoc(collection(db, `artifacts/${appId}/users/${userId}/imageGenerations`), {
                         prompt: prompt,
                         timestamp: serverTimestamp(),
@@ -1689,7 +1690,7 @@ function CreativeCanvas({ db, auth, userId, onSignOut, onNavigate, currentView, 
     // Effect to load content from Firestore on mount
     useEffect(() => {
         if (db && userId) {
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const appId = process.env.REACT_APP_FIREBASE_PROJECT_ID || 'stellarmind-app';
             canvasDocRef.current = doc(db, `artifacts/${appId}/users/${userId}/creativeCanvas/main`);
 
             const fetchContent = async () => {
@@ -1976,7 +1977,7 @@ function DeepResearch({ db, auth, userId, onSignOut, onNavigate, currentView, cu
                 setResearchResult(finalResult);
 
                  if (db && userId) {
-                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+                    const appId = process.env.REACT_APP_FIREBASE_PROJECT_ID || 'stellarmind-app';
                     await addDoc(collection(db, `artifacts/${appId}/users/${userId}/deepResearchQueries`), {
                         query: queryText,
                         result: finalResult,
@@ -2110,15 +2111,8 @@ function App() {
             appId: "YOUR_FIREBASE_APP_ID" // Replace with your Firebase App ID
         };
 
-        // The __firebase_config and __initial_auth_token are provided by the Canvas environment.
-        // For external deployment, the above firebaseConfig object will be used.
-        // The anonymous/custom token sign-in logic below is primarily for Canvas.
-        // For external deployment, you'll rely on standard Firebase Auth methods (Google, Email/Password etc.)
-        const canvasFirebaseConfig = typeof __firebase_config !== 'undefined'
-            ? JSON.parse(__firebase_config)
-            : null;
-
-        const app = initializeApp(canvasFirebaseConfig || firebaseConfig); // Use Canvas config if available, else hardcoded
+        // Initialize Firebase app with your configuration
+        const app = initializeApp(firebaseConfig);
         const authInstance = getAuth(app);
         const dbInstance = getFirestore(app);
 
@@ -2134,26 +2128,16 @@ function App() {
                 }
                 console.log("User ID set:", user.uid, "Is Guest:", user.isAnonymous);
             } else {
+                // If no user is logged in, sign in anonymously as a fallback for guest access
                 try {
-                    // This block is mainly for Canvas environment's auto-sign-in.
-                    // For external deployment, users will explicitly sign in via Google/Email/Password.
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && !canvasFirebaseConfig) {
-                        console.log("Attempting custom token sign-in (Canvas environment).");
-                        const userCredential = await signInWithCustomToken(authInstance, __initial_auth_token);
-                        setUserId(userCredential.user.uid);
-                        setIsGuest(userCredential.user.isAnonymous);
-                        if (!userCredential.user.isAnonymous) {
-                            setCurrentPlan('Basic');
-                        }
-                    } else {
-                        console.log("Attempting anonymous sign-in (for external deployment or if Canvas token is missing).");
-                        const userCredential = await signInAnonymously(authInstance);
-                        setUserId(userCredential.user.uid);
-                        setIsGuest(true);
-                        setCurrentPlan('Basic'); // Guests always start with Basic's limits
-                    }
+                    console.log("No user logged in, attempting anonymous sign-in.");
+                    const userCredential = await signInAnonymously(authInstance);
+                    setUserId(userCredential.user.uid);
+                    setIsGuest(true);
+                    setCurrentPlan('Basic'); // Guests always start with Basic's limits
                 } catch (error) {
-                    console.error("Firebase Auth Error (Anonymous/Custom Token fallback):", error);
+                    console.error("Firebase Anonymous Sign-in Error:", error);
+                    // Fallback to a random UUID if anonymous sign-in fails
                     const fallbackUserId = generateUUID();
                     setUserId(fallbackUserId);
                     setIsGuest(true);
