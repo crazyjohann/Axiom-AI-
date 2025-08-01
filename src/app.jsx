@@ -757,7 +757,7 @@ function LoginPage({ onLoginSuccess, onGoBack, auth }) {
                     {isRegistering ? 'Register' : 'Sign In'} to StellarMind AI
                 </h2>
                 {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleEmailPasswordAuth} className="space-y-4"> {/* Changed handleSubmit to handleEmailPasswordAuth */}
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email</label>
                         <input
@@ -987,7 +987,7 @@ function LandingPage({ onSignInClick, onGuestAccess }) {
 // START: Chat Component
 // Handles chat functionality with AI and displays messages.
 // ====================================================================================================
-function Chat({ db, auth, userId, onSignOut, onNavigate, currentView, currentPlan, onSelectPlan }) {
+function Chat({ db, auth, userId, onSignOut, onNavigate, currentView, currentPlan, onSelectPlan, appId }) { // Added appId prop
     const [isMenuExpanded, setIsMenuExpanded] = useState(true);
     const [messages, setMessages] = useState([]);
     const [inputMessage, setInputMessage] = useState('');
@@ -1021,9 +1021,7 @@ function Chat({ db, auth, userId, onSignOut, onNavigate, currentView, currentPla
 
     // Effect to fetch messages from Firestore
     useEffect(() => {
-        if (db && userId) {
-            // Use a hardcoded app ID or derive from Firebase config for external deployment
-            const appId = process.env.REACT_APP_FIREBASE_PROJECT_ID || 'stellarmind-app';
+        if (db && userId && appId) { // Added appId to dependency array
             const messagesCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/messages`);
             const q = query(messagesCollectionRef);
 
@@ -1042,7 +1040,7 @@ function Chat({ db, auth, userId, onSignOut, onNavigate, currentView, currentPla
 
             return () => unsubscribe();
         }
-    }, [db, userId]);
+    }, [db, userId, appId]); // Added appId to dependency array
 
     // Effect to scroll to the bottom of the chat when messages update
     useEffect(() => {
@@ -1051,8 +1049,8 @@ function Chat({ db, auth, userId, onSignOut, onNavigate, currentView, currentPla
 
     // Function to handle sending a new message
     const handleSendMessage = async () => {
-        if (inputMessage.trim() === '' || !db || !userId || isSending) {
-            console.log("Input is empty, Firebase not ready, or message already sending.");
+        if (inputMessage.trim() === '' || !db || !userId || isSending || !appId) { // Added appId check
+            console.log("Input is empty, Firebase not ready, or message already sending, or appId missing.");
             return;
         }
 
@@ -1079,8 +1077,7 @@ function Chat({ db, auth, userId, onSignOut, onNavigate, currentView, currentPla
         };
 
         try {
-            const appId = process.env.REACT_APP_FIREBASE_PROJECT_ID || 'stellarmind-app';
-            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/messages`), userMessage);
+            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/messages`), userMessage); // Used appId directly
 
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: userMessageText }] });
@@ -1114,7 +1111,7 @@ function Chat({ db, auth, userId, onSignOut, onNavigate, currentView, currentPla
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 userId: 'StellarMindAI',
             };
-            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/messages`), aiMessage);
+            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/messages`), aiMessage); // Used appId directly
 
         } catch (e) {
             console.error("Error sending message or getting AI response: ", e);
@@ -1125,7 +1122,7 @@ function Chat({ db, auth, userId, onSignOut, onNavigate, currentView, currentPla
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 userId: 'StellarMindAI',
             };
-            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/messages`), errorMessage);
+            await addDoc(collection(db, `artifacts/${appId}/users/${userId}/messages`), errorMessage); // Used appId directly
             setModalMessage(`Failed to send message or get AI response: ${e.message}. Please check your internet connection, ensure the API is running, and verify CORS settings if applicable.`);
         } finally {
             setIsSending(false);
@@ -1290,7 +1287,7 @@ function Chat({ db, auth, userId, onSignOut, onNavigate, currentView, currentPla
 // START: ImageGenerator Component
 // Handles image generation functionality.
 // ====================================================================================================
-function ImageGenerator({ db, auth, userId, onSignOut, onNavigate, currentView, currentPlan, onSelectPlan }) {
+function ImageGenerator({ db, auth, userId, onSignOut, onNavigate, currentView, currentPlan, onSelectPlan, appId }) { // Added appId prop
     const [isMenuExpanded, setIsMenuExpanded] = useState(true);
     const [prompt, setPrompt] = useState('');
     const [imageUrl, setImageUrl] = useState('');
@@ -1362,9 +1359,8 @@ function ImageGenerator({ db, auth, userId, onSignOut, onNavigate, currentView, 
                 const generatedImageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
                 setImageUrl(generatedImageUrl);
 
-                if (db && userId) {
-                    const appId = process.env.REACT_APP_FIREBASE_PROJECT_ID || 'stellarmind-app';
-                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/imageGenerations`), {
+                if (db && userId && appId) { // Added appId check
+                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/imageGenerations`), { // Used appId directly
                         prompt: prompt,
                         timestamp: serverTimestamp(),
                         userId: userId,
@@ -1468,7 +1464,7 @@ function ImageGenerator({ db, auth, userId, onSignOut, onNavigate, currentView, 
 // START: CodePlayground Component
 // Allows users to write, run, and get AI assistance for code.
 // ====================================================================================================
-function CodePlayground({ db, auth, userId, onSignOut, onNavigate, currentView, currentPlan, onSelectPlan }) {
+function CodePlayground({ db, auth, userId, onSignOut, onNavigate, currentView, currentPlan, onSelectPlan, appId }) { // Added appId prop
     const [isMenuExpanded, setIsMenuExpanded] = useState(true);
     const [aiGeneratedCode, setAiGeneratedCode] = useState('');
     const [aiRequestPrompt, setAiRequestPrompt] = useState('');
@@ -1663,7 +1659,7 @@ function CodePlayground({ db, auth, userId, onSignOut, onNavigate, currentView, 
 // START: CreativeCanvas Component
 // A dedicated space for creative writing, enhanced by AI.
 // ====================================================================================================
-function CreativeCanvas({ db, auth, userId, onSignOut, onNavigate, currentView, currentPlan, onSelectPlan }) {
+function CreativeCanvas({ db, auth, userId, onSignOut, onNavigate, currentView, currentPlan, onSelectPlan, appId }) { // Added appId prop
     const [isMenuExpanded, setIsMenuExpanded] = useState(true);
     const [canvasPrompt, setCanvasPrompt] = useState('');
     const [canvasContent, setCanvasContent] = useState('');
@@ -1689,9 +1685,8 @@ function CreativeCanvas({ db, auth, userId, onSignOut, onNavigate, currentView, 
 
     // Effect to load content from Firestore on mount
     useEffect(() => {
-        if (db && userId) {
-            const appId = process.env.REACT_APP_FIREBASE_PROJECT_ID || 'stellarmind-app';
-            canvasDocRef.current = doc(db, `artifacts/${appId}/users/${userId}/creativeCanvas/main`);
+        if (db && userId && appId) { // Added appId check
+            canvasDocRef.current = doc(db, `artifacts/${appId}/users/${userId}/creativeCanvas/main`); // Used appId directly
 
             const fetchContent = async () => {
                 try {
@@ -1708,11 +1703,11 @@ function CreativeCanvas({ db, auth, userId, onSignOut, onNavigate, currentView, 
             };
             fetchContent();
         }
-    }, [db, userId]);
+    }, [db, userId, appId]); // Added appId to dependency array
 
     // Effect to save content to Firestore on changes (debounced)
     useEffect(() => {
-        if (!db || !userId || !canvasDocRef.current) return;
+        if (!db || !userId || !canvasDocRef.current || !appId) return; // Added appId check
 
         const handler = setTimeout(async () => {
             try {
@@ -1727,7 +1722,7 @@ function CreativeCanvas({ db, auth, userId, onSignOut, onNavigate, currentView, 
         return () => {
             clearTimeout(handler);
         };
-    }, [canvasContent, db, userId]);
+    }, [canvasContent, db, userId, appId]); // Added appId to dependency array
 
     const handleAiEnhance = async () => {
         if (!canvasPrompt.trim()) {
@@ -1895,7 +1890,7 @@ function CreativeCanvas({ db, auth, userId, onSignOut, onNavigate, currentView, 
 // START: DeepResearch Component
 // Allows users to perform deep research with AI assistance.
 // ====================================================================================================
-function DeepResearch({ db, auth, userId, onSignOut, onNavigate, currentView, currentPlan, onSelectPlan }) {
+function DeepResearch({ db, auth, userId, onSignOut, onNavigate, currentView, currentPlan, onSelectPlan, appId }) { // Added appId prop
     const [isMenuExpanded, setIsMenuExpanded] = useState(true);
     const [queryText, setQueryText] = useState('');
     const [researchResult, setResearchResult] = useState('');
@@ -1976,9 +1971,8 @@ function DeepResearch({ db, auth, userId, onSignOut, onNavigate, currentView, cu
                 const finalResult = llmResult.candidates[0].content.parts[0].text;
                 setResearchResult(finalResult);
 
-                 if (db && userId) {
-                    const appId = process.env.REACT_APP_FIREBASE_PROJECT_ID || 'stellarmind-app';
-                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/deepResearchQueries`), {
+                 if (db && userId && appId) { // Added appId check
+                    await addDoc(collection(db, `artifacts/${appId}/users/${userId}/deepResearchQueries`), { // Used appId directly
                         query: queryText,
                         result: finalResult,
                         timestamp: serverTimestamp(),
@@ -2096,6 +2090,7 @@ function App() {
     const [currentPlan, setCurrentPlan] = useState('Basic'); // Still track for display, but features are unlocked
     const [show2FAModal, setShow2FAModal] = useState(false); // State to show 2FA modal
     const [pendingLoginSuccess, setPendingLoginSuccess] = useState(false); // To handle post-2FA navigation
+    const [appId, setAppId] = useState(null); // State to store the Firebase App ID
 
     // Effect hook for Firebase initialization and authentication.
     useEffect(() => {
@@ -2118,6 +2113,7 @@ function App() {
 
         setAuth(authInstance);
         setDb(dbInstance);
+        setAppId(firebaseConfig.projectId); // Set the appId state here
 
         const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
             if (user) {
@@ -2214,6 +2210,7 @@ function App() {
             currentPlan,
             onSelectPlan: handleSelectPlan,
             isGuest,
+            appId, // Pass appId to all components that need it
         };
 
         return (
