@@ -313,7 +313,7 @@ function UpgradeModal({ onClose, onSignInClick, isGuest }) {
 // START: TwoFactorAuthModal Component (Simulated 2FA)
 // This component simulates a 2FA prompt.
 // ====================================================================================================
-function TwoFactorAuthModal({ onVerify, onClose }) {
+function TwoFactorAuthModal({ onVerify, onClose, email }) { // Added email prop
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
 
@@ -332,7 +332,7 @@ function TwoFactorAuthModal({ onVerify, onClose }) {
             <div className="bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full text-gray-100 text-center">
                 <h2 className="text-2xl font-bold mb-4">Two-Factor Authentication</h2>
                 <p className="mb-6 text-gray-300">
-                    Please enter the 6-digit code sent to your simulated device.
+                    Please enter the 6-digit code that would have been sent to <span className="font-semibold text-white">{email || 'your email'}</span>.
                     (Hint: Use "123456" for demonstration)
                 </p>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -694,6 +694,7 @@ function LoginPage({ onLoginSuccess, onGoBack, auth }) {
     const [error, setError] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
     const [show2FAModal, setShow2FAModal] = useState(false); // State for 2FA modal
+    const [modalMessage, setModalMessage] = useState(''); // State for general messages
 
     const handleEmailPasswordAuth = async (e) => {
         e.preventDefault();
@@ -709,10 +710,12 @@ function LoginPage({ onLoginSuccess, onGoBack, auth }) {
                 // For a real app, you'd use createUserWithEmailAndPassword here
                 console.log("Simulating email/password registration...");
                 // await createUserWithEmailAndPassword(auth, email, password);
+                setModalMessage(`A simulated 2FA code has been sent to ${email}. Please use "123456" to verify.`);
             } else {
                 // For a real app, you'd use signInWithEmailAndPassword here
                 console.log("Simulating email/password login...");
                 // await signInWithEmailAndPassword(auth, email, password);
+                setModalMessage(`A simulated 2FA code has been sent to ${email}. Please use "123456" to verify.`);
             }
             setShow2FAModal(true); // Show 2FA modal on successful simulated login/registration
         } catch (err) {
@@ -735,6 +738,8 @@ function LoginPage({ onLoginSuccess, onGoBack, auth }) {
             // is added to "Authorized domains" in your Firebase Console -> Authentication -> Settings.
             console.log("Attempting Google Sign-in...");
             await signInWithPopup(auth, provider);
+            // For Google Sign-in, 2FA might be handled by Google itself, but we'll still show our simulated one for consistency
+            setModalMessage(`A simulated 2FA code has been sent to your Google-linked email. Please use "123456" to verify.`);
             setShow2FAModal(true); // Show 2FA modal on successful Google Sign-in
         } catch (err) {
             console.error("Google Sign-in error:", err);
@@ -744,6 +749,7 @@ function LoginPage({ onLoginSuccess, onGoBack, auth }) {
 
     const handle2FAVerified = () => {
         setShow2FAModal(false);
+        setModalMessage(''); // Clear message after 2FA is verified
         onLoginSuccess(); // Proceed to app after 2FA
     };
 
@@ -819,8 +825,10 @@ function LoginPage({ onLoginSuccess, onGoBack, auth }) {
                 <TwoFactorAuthModal
                     onVerify={handle2FAVerified}
                     onClose={() => setShow2FAModal(false)}
+                    email={email} // Pass the email to the 2FA modal
                 />
             )}
+            <MessageModal message={modalMessage} onClose={() => setModalMessage('')} /> {/* Display general messages */}
         </div>
     );
 }
@@ -2239,6 +2247,7 @@ function App() {
                     <TwoFactorAuthModal
                         onVerify={handle2FAVerified}
                         onClose={() => setShow2FAModal(false)} // Allow closing 2FA modal
+                        email={email} // Pass the email to the 2FA modal
                     />
                 )}
             </UserLimitProvider>
