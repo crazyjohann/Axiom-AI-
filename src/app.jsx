@@ -757,7 +757,7 @@ function LoginPage({ onLoginSuccess, onGoBack, auth }) {
                     {isRegistering ? 'Register' : 'Sign In'} to StellarMind AI
                 </h2>
                 {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-                <form onSubmit={handleEmailPasswordAuth} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email</label>
                         <input
@@ -2103,12 +2103,12 @@ function App() {
         // you MUST replace this placeholder with your actual Firebase project configuration.
         // You can find this in your Firebase Console -> Project settings -> General -> Your apps -> Web app -> Config.
         const firebaseConfig = {
-            apiKey: "YOUR_FIREBASE_API_KEY", // Replace with your Firebase Web API Key
-            authDomain: "YOUR_FIREBASE_PROJECT_ID.firebaseapp.com", // Replace with your Firebase Auth Domain
-            projectId: "YOUR_FIREBASE_PROJECT_ID", // Replace with your Firebase Project ID
-            storageBucket: "YOUR_FIREBASE_PROJECT_ID.appspot.com", // Replace with your Firebase Storage Bucket
-            messagingSenderId: "YOUR_FIREBASE_MESSAGING_SENDER_ID", // Replace with your Firebase Messaging Sender ID
-            appId: "YOUR_FIREBASE_APP_ID" // Replace with your Firebase App ID
+            apiKey: "AIzaSyA1sBuNONFs2pleCY4EdVBHvhDNit6lU_U", // Replaced with your Firebase Web API Key
+            authDomain: "axiom-ai-13dea.firebaseapp.com", // Replaced with your Firebase Auth Domain
+            projectId: "axiom-ai-13dea", // Replaced with your Firebase Project ID
+            storageBucket: "axiom-ai-13dea.appspot.com", // Replaced with your Firebase Storage Bucket
+            messagingSenderId: "583499869103", // Replaced with your Firebase Messaging Sender ID (Project Number)
+            appId: "1:583499869103:web:4c81770adcc90685f0dd5a" // THIS IS A PLACEHOLDER. Please find your actual App ID in Firebase Console -> Project settings -> General -> Your apps -> Web app -> Config.
         };
 
         // Initialize Firebase app with your configuration
