@@ -688,7 +688,7 @@ const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
 // START: LoginPage Component
 // Handles user sign-in and registration.
 // ====================================================================================================
-function LoginPage({ onLoginSuccess, onGoBack, auth }) {
+function LoginPage({ onLoginSuccess, onGoBack, auth, setEmailFor2FA }) { // Added setEmailFor2FA prop
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -717,6 +717,7 @@ function LoginPage({ onLoginSuccess, onGoBack, auth }) {
                 // await signInWithEmailAndPassword(auth, email, password);
                 setModalMessage(`A simulated 2FA code has been sent to ${email}. Please use "123456" to verify.`);
             }
+            setEmailFor2FA(email); // Update email in parent App component
             setShow2FAModal(true); // Show 2FA modal on successful simulated login/registration
         } catch (err) {
             console.error("Authentication error:", err);
@@ -737,7 +738,8 @@ function LoginPage({ onLoginSuccess, onGoBack, auth }) {
             // ensure the domain where your app is hosted (e.g., Netlify/Vercel URL)
             // is added to "Authorized domains" in your Firebase Console -> Authentication -> Settings.
             console.log("Attempting Google Sign-in...");
-            await signInWithPopup(auth, provider);
+            const result = await signInWithPopup(auth, provider);
+            setEmailFor2FA(result.user.email); // Update email in parent App component with Google email
             // For Google Sign-in, 2FA might be handled by Google itself, but we'll still show our simulated one for consistency
             setModalMessage(`A simulated 2FA code has been sent to your Google-linked email. Please use "123456" to verify.`);
             setShow2FAModal(true); // Show 2FA modal on successful Google Sign-in
@@ -1170,7 +1172,7 @@ function Chat({ db, auth, userId, onSignOut, onNavigate, currentView, currentPla
                 currentView={currentView}
                 onSignOut={onSignOut}
                 auth={auth}
-                handleNewChat={handleNewChat}
+                handleNewChat={() => onNavigate('chat')}
             />
 
             {/* Main Content Area */}
@@ -2099,6 +2101,7 @@ function App() {
     const [show2FAModal, setShow2FAModal] = useState(false); // State to show 2FA modal
     const [pendingLoginSuccess, setPendingLoginSuccess] = useState(false); // To handle post-2FA navigation
     const [appId, setAppId] = useState(null); // State to store the Firebase App ID
+    const [emailFor2FA, setEmailFor2FA] = useState(''); // New state to store email for 2FA modal
 
     // Effect hook for Firebase initialization and authentication.
     useEffect(() => {
@@ -2228,7 +2231,7 @@ function App() {
                         case 'landing':
                             return <LandingPage onSignInClick={() => setCurrentView('login')} onGuestAccess={handleGuestAccess} />;
                         case 'login':
-                            return <LoginPage onLoginSuccess={handleLoginSuccess} onGoBack={() => setCurrentView('landing')} auth={auth} />;
+                            return <LoginPage onLoginSuccess={handleLoginSuccess} onGoBack={() => setCurrentView('landing')} auth={auth} setEmailFor2FA={setEmailFor2FA} />;
                         case 'chat':
                             return <Chat {...commonProps} />;
                         case 'image':
@@ -2247,7 +2250,7 @@ function App() {
                     <TwoFactorAuthModal
                         onVerify={handle2FAVerified}
                         onClose={() => setShow2FAModal(false)} // Allow closing 2FA modal
-                        email={email} // Pass the email to the 2FA modal
+                        email={emailFor2FA} // Pass the email from App's state to the 2FA modal
                     />
                 )}
             </UserLimitProvider>
