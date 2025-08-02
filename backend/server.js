@@ -24,8 +24,8 @@ app.use(cors()); // Enables CORS for all routes, allowing your React app to make
 const transporter = nodemailer.createTransport({
     service: 'gmail', // Or your email service provider (e.g., 'Outlook365', 'SendGrid')
     auth: {
-        user: process.env.EMAIL_USER || 'your_email@gmail.com', // Replace with your email
-        pass: process.env.EMAIL_PASS || 'your_email_password' // Replace with your email password or app password
+        user: process.env.EMAIL_USER || 'pravaase@gmail.com', // Replace with your email
+        pass: process.env.EMAIL_PASS || 'JohannA20141!' // Replace with your email password or app password
     }
 });
 
